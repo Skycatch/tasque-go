@@ -1,9 +1,9 @@
 build:
-	docker build -t skycatch/tasque:$(VERSION)-$(TASQUE_VERSION)-$(VARIANT) \
-							 -t skycatch/tasque:$(VERSION)-$(VARIANT) \
-							 -t skycatch/tasque:$(VARIANT) \
+	docker build -t tasque/node:$(VERSION)-$(TASQUE_VERSION)-$(VARIANT) \
+							 -t tasque/node:$(VERSION)-$(VARIANT) \
+							 -t tasque/node:$(VARIANT) \
 							  .
 
 push:
-	docker push skycatch/tasque:$(VERSION)-$(TASQUE_VERSION)-$(VARIANT)
-	docker push skycatch/tasque:$(VARIANT)
+	docker push tasque/node:$(VERSION)-$(TASQUE_VERSION)-$(VARIANT)
+	docker push tasque/node:$(VARIANT)

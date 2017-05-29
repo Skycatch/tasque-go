@@ -1,4 +1,4 @@
-FROM tasque/node:trusty
+FROM tasque/node:4.8-trusty
 
 ONBUILD COPY package.json /app/
 ONBUILD RUN npm install

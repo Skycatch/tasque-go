@@ -1,7 +1,7 @@
 FROM alpine:3.4
 WORKDIR /app
 
-ENV NODE_VERSION=v4.8.1 NPM_VERSION=2
+ENV NODE_VERSION=v4.8.3 NPM_VERSION=4.6.1
 
 RUN echo $(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) && \
     apk add --update --no-cache --virtual build-dependencies gcc g++ linux-headers libgcc libstdc++ binutils-gold && \

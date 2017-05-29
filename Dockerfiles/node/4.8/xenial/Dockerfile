@@ -1,4 +1,4 @@
-FROM buildpack-deps:trusty-curl
+FROM buildpack-deps:xenial-curl
 WORKDIR /app
 
 # gpg keys listed at https://github.com/nodejs/node
