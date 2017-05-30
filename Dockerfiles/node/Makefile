@@ -1,5 +1,5 @@
-VERSIONS=4.4
-VARIANTS=alpine alpine-onbuild trusty trusty-onbuild
+VERSIONS=4.8 6.10
+VARIANTS=trusty
 
 build:
 	for version in $(VERSIONS); do \
