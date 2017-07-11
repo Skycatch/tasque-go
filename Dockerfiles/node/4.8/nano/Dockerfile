@@ -20,7 +20,7 @@ RUN @( \
       gpg --keyserver ha.pool.sks-keyservers.net --recv-keys $_ ; \
     }
 
-ENV NODE_VERSION=v4.8.3
+ENV NODE_VERSION 4.8.3
 
 RUN Invoke-WebRequest $('https://nodejs.org/dist/v{0}/SHASUMS256.txt.asc' -f $env:NODE_VERSION) -OutFile 'SHASUMS256.txt.asc' -UseBasicParsing ; \
     gpg --batch --decrypt --output SHASUMS256.txt SHASUMS256.txt.asc
@@ -42,4 +42,6 @@ COPY --from=download /nodejs /nodejs
 RUN New-Item $($env:APPDATA + '\npm') ; \
     $env:PATH = 'C:\nodejs;{0}\npm;{1}' -f $env:APPDATA, $env:PATH ; \
     Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\' -Name Path -Value $env:PATH
-CMD [ "node.exe" ]
+
+COPY ./tasque.exe c:/tasque.exe
+ENTRYPOINT [ "c:\\tasque.exe" ]
