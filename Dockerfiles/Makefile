@@ -1,16 +1,11 @@
-TASQUE_VERSION=0.02
-LANGUAGES=node
+ifeq ($(OS),Windows_NT)
+	MAKEFILE = Makefile.win
+else
+	MAKEFILE = Makefile.linux
+endif
 
 build:
-	for language in $(LANGUAGES); do \
-		TASQUE_VERSION=$(TASQUE_VERSION) \
-		LANGUAGE=$$language \
-		make -C $$language; \
-	done
+	make -f $(MAKEFILE) build
 
-push: build
-	for language in $(LANGUAGES); do \
-		TASQUE_VERSION=$(TASQUE_VERSION) \
-		LANGUAGE=$$language \
-		make push -C $$language; \
-	done
+push:
+	make -f $(MAKEFILE) push

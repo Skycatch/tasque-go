@@ -44,4 +44,4 @@ RUN New-Item $($env:APPDATA + '\npm') ; \
     Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\' -Name Path -Value $env:PATH
 
 COPY ./tasque.exe c:/tasque.exe
-ENTRYPOINT [ "c:\\tasque.exe" ]
+ENTRYPOINT [ "c:\\tasque" ]
