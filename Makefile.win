@@ -16,6 +16,6 @@ build:
 	set GOOS=windows
 	set GOARCH=amd64
 	go build -a -installsuffix cgo -o tasque .
-	docker build -t tasque/tasque .
+	docker build -t tasque/tasque -f Dockerfile.win .
 upload:
 	docker push tasque/tasque
