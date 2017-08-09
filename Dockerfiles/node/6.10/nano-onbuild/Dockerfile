@@ -1,5 +1,5 @@
 
-FROM node:6.10.3-nanoserver
+FROM tasque/node:6.10-0.02-nano
 
 RUN mkdir \app
 WORKDIR /app
