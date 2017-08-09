@@ -5,7 +5,7 @@ build:
 							 -t tasque/node:$(VERSION)-$(VARIANT) \
 							 -t tasque/node:$(VARIANT) \
 							  .
-	rm tasque
+	del tasque
 
 push:
 	docker push tasque/node:$(VERSION)-$(TASQUE_VERSION)-$(VARIANT)
