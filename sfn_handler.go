@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sfn"
+	"github.com/blaines/tasque-go/result"
 )
 
 // SFNHandler hello world
@@ -54,7 +55,6 @@ func (handler *SFNHandler) initialize() {
 	// })
 	client := sfn.New(sess)
 	handler.newClient(*client)
-	handler.activityARN = os.Getenv("TASK_ACTIVITY_ARN")
 }
 
 func (handler *SFNHandler) newClient(client sfn.SFN) {
@@ -64,9 +64,10 @@ func (handler *SFNHandler) newClient(client sfn.SFN) {
 func (handler *SFNHandler) receive() bool {
 	for {
 		log.Printf("Waiting for SFN activity data from %s", handler.activityARN)
+		hostname, _ := os.Hostname()
 		getActivityTaskParams := &sfn.GetActivityTaskInput{
 			ActivityArn: aws.String(handler.activityARN),
-			WorkerName:  aws.String("WorkerDemo"),
+			WorkerName:  aws.String(hostname),
 		}
 		receiveMessageResponse, receiveMessageError := handler.client.GetActivityTask(getActivityTaskParams)
 
@@ -102,11 +103,11 @@ func (handler *SFNHandler) success() {
 	}
 }
 
-func (handler *SFNHandler) failure(err error) {
+func (handler *SFNHandler) failure(err result.Result) {
 	sendTaskFailureParams := &sfn.SendTaskFailureInput{
 		TaskToken: aws.String(handler.taskToken),
-		Error:     aws.String("FailureDuringExecution"),
-		Cause:     aws.String(err.Error()),
+		Error:     aws.String(err.Error),
+		Cause:     aws.String(err.Message()),
 	}
 	_, deleteMessageError := handler.client.SendTaskFailure(sendTaskFailureParams)
 

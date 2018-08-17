@@ -4,13 +4,13 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
+	"github.com/blaines/tasque-go/result"
 )
 
 // SQSHandler hello world
@@ -40,12 +40,12 @@ func (handler *SQSHandler) body() *string {
 
 func (handler *SQSHandler) initialize() {
 	handler.newClient(sqs.New(session.New(), &aws.Config{
+		Region:     &handler.awsRegion,
 		MaxRetries: aws.Int(30),
 		HTTPClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
 	}))
-	handler.queueURL = os.Getenv("TASK_QUEUE_URL")
 }
 
 func (handler *SQSHandler) newClient(client sqsiface.SQSAPI) {
@@ -94,5 +94,5 @@ func (handler *SQSHandler) success() {
 	}
 }
 
-func (handler *SQSHandler) failure(err error) {}
-func (handler *SQSHandler) heartbeat()        {}
+func (handler *SQSHandler) failure(err result.Result) {}
+func (handler *SQSHandler) heartbeat()                {}
