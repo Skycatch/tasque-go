@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/blaines/tasque-go/result"
 	"github.com/fsouza/go-dockerclient"
+	"github.com/skycatch/tasque-go/result"
 )
 
 // AuthData is the authentication information for a docker repository

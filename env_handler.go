@@ -1,6 +1,6 @@
 package main
 
-import "github.com/blaines/tasque-go/result"
+import "github.com/skycatch/tasque-go/result"
 
 // ENVHandler hello world
 type ENVHandler struct {

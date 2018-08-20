@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/blaines/tasque-go/result"
+	"github.com/skycatch/tasque-go/result"
 )
 
 // Executable hello world

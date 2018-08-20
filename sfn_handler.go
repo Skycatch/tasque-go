@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sfn"
-	"github.com/blaines/tasque-go/result"
+	"github.com/skycatch/tasque-go/result"
 )
 
 // SFNHandler hello world

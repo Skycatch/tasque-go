@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
-	"github.com/blaines/tasque-go/result"
+	"github.com/skycatch/tasque-go/result"
 )
 
 // SQSHandler hello world
