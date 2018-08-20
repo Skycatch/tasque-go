@@ -1,4 +1,0 @@
-FROM microsoft/nanoserver
-
-ADD tasque /
-CMD ["/tasque"]
