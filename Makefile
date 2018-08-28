@@ -10,7 +10,7 @@ build:
 	-a -installsuffix cgo \
 	-ldflags "-X 'main.Version=${version}' -X 'main.GitSummary=${git_summary}' -X 'main.BuildDate=${build_date}' -X main.GitCommit=${git_sha} -X main.GitBranch=${git_branch}" \
 	-o tasque .
-	docker build -t tasque/tasque:${arch} .
+	docker build -f Dockerfile.linux -t tasque/tasque:${arch}-${version} .
 
 upload:
-	docker push tasque/tasque:${arch}
+	docker push tasque/tasque:${arch}-${version}
