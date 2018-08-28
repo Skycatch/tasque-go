@@ -78,6 +78,10 @@ func (handler *SFNHandler) receive() bool {
 			return false
 		}
 
+		// If no task is available within 60 seconds, the poll returns a taskToken with a null string.
+		// Workers should set their client side socket timeout to at least 65 seconds
+		// (5 seconds higher than the maximum time the service may hold the poll request).
+
 		if receiveMessageResponse.TaskToken != nil {
 			handler.messageBody = *receiveMessageResponse.Input
 			handler.taskToken = *receiveMessageResponse.TaskToken
@@ -87,6 +91,9 @@ func (handler *SFNHandler) receive() bool {
 				panic(writeFileError)
 			}
 			return true
+		} else {
+			log.Fatal("E: no task was available within 60 seconds!")
+			return false
 		}
 	}
 }
