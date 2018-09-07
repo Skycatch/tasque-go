@@ -11,8 +11,10 @@ import (
 )
 
 const (
+	// StepFunctionArnFormat is used for sanity checking the ARN of the step Function
 	StepFunctionArnFormat = "arn:aws:states:[^:]+:[^:]+:activity:[^:]+"
-	SQSURLFormat          = "https://sqs.([a-zA-Z0-9-]+).amazonaws.com/[^/]+/.+"
+	// SQSURLFormat is used for sanity checking the ARN of the SQS URL
+	SQSURLFormat = "https://sqs.([a-zA-Z0-9-]+).amazonaws.com/[^/]+/.+"
 )
 
 var (
@@ -56,9 +58,12 @@ type Tasque struct {
 // }
 
 func main() {
+	// Parsing the Argument list and making sure all the necessary variables are set or
+	// read as environment variable before execution
 	app := cli.NewApp()
 	app.Name = "tasque"
 	app.Usage = "Pass messages to executables and Docker containers from AWS SQS or Step Functions"
+	//Version is read from VERSION file
 	app.Version = Version
 	cli.VersionPrinter = func(c *cli.Context) {
 		fmt.Printf("version=%s buildDate=%s sha=%s branch=%s (%s)\n", c.App.Version, BuildDate, GitCommit, GitBranch, GitSummary)
@@ -68,7 +73,9 @@ func main() {
 		return nil
 	}
 
+	// godotenv.Load()
 	app.Flags = []cli.Flag{
+		// may be either ecs, docker or local. default is local
 		cli.StringFlag{
 			Name:   "execute-method, deploy-method, m",
 			Usage:  "execution environment: local, docker, or ecs",
@@ -76,6 +83,7 @@ func main() {
 			EnvVar: "EXECUTE_METHOD,DEPLOY_METHOD",
 		},
 		cli.StringFlag{
+			// name of the container created from the selected image
 			Name:   "container-name, n",
 			Usage:  "name for the new container",
 			Value:  "tasque_executable",
@@ -88,11 +96,33 @@ func main() {
 			EnvVar: "DOCKER_ENDPOINT",
 		},
 		cli.StringFlag{
+			// ARN of the ECS task or JSON suitable for Docker API /container/create
+			// Examples:
+			// 		Docker :
+			//					{
+			// 					 "ImageName": "skycatch/pipeline-agisoft:offline_lic",
+			// 					 "MacAddress": "02-42-ac-11-00-FE",
+			// 					 "Env":[
+			// 							"AGISOFT_VALIDATION_CODE=TGN25-21RGK-UM9NG-UK49O-V55ZO",
+			// 							"AWS_ACCESS_KEY=AKIAJN1L4ZAV3AZJA3XQ",
+			// 							"AWS_REGION=us-west-2",
+			// 							"AWS_SECRET_KEY=CS+hdq1WMvDw7RWE17UQmz/mCGt5EHDL4ZbI9IqL",
+			// 							"DOWNLOAD_BUCKET=skycatch-processing-jobs",
+			// 							"ENVIRONMENT=production",
+			// 							"PUBLISH_KEY=pub-c-08a22e98-161d-46d0-a3fa-6c6e6d390b25",
+			// 							"SUBSCRIBE_KEY=sub-c-fda76e74-267d-11e6-9a17-0619f8945a4f",
+			// 							"UPLOAD_BUCKET=skycatch-processing-jobs"
+			// 							]
+			//					}
+			//		aws:
+			//				development-airlift-sandbox-worker
 			Name:   "task-definition, f",
 			Usage:  "ARN of the ECS task or JSON suitable for Docker API /container/create",
 			EnvVar: "TASK_DEFINITION,DOCKER_TASK_DEFINITION,ECS_TASK_DEFINITION",
 		},
 		cli.StringFlag{
+			// Task activity arn
+			// example  arn:aws:states:us-west-2:291403077761:activity:development-airlift-sandbox-worker
 			Name:   "sfn-activity-arn, sqs-queue-url, q",
 			Usage:  "the Step Functions activity ARN or SQS queue URL to receive messages on",
 			EnvVar: "TASK_ACTIVITY_ARN,TASK_QUEUE_URL,RECEIVE_PATH",
