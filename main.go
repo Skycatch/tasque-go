@@ -3,9 +3,11 @@ package main
 import (
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"encoding/json"
+
 	"github.com/aws/aws-sdk-go/aws"
 )
 
@@ -54,7 +56,9 @@ func main() {
 		if *deployMethod == "" {
 			*deployMethod = "ECS"
 		}
-		if *deployMethod == "DOCKER" {
+
+		switch strings.ToUpper(*deployMethod) {
+		case "DOCKER":
 			// DOCKER_CONTAINER_NAME
 			overrideContainerName = aws.String(os.Getenv("DOCKER_CONTAINER_NAME"))
 			if *overrideContainerName == "" {
@@ -86,7 +90,12 @@ func main() {
 			d.connect(dockerEndpointPath)
 			tasque.Executable = d
 			tasque.runWithTimeout()
-		} else {
+		case "EKS":
+			tasque.Executable = &AWSEKS{
+				DockerImage: "hello-world",
+			}
+			tasque.runWithTimeout()
+		case "ECS":
 			// ECS_TASK_DEFINITION
 			taskDefinition = aws.String(os.Getenv("ECS_TASK_DEFINITION"))
 			if *taskDefinition == "" {
@@ -115,6 +124,8 @@ func main() {
 				timeout:               getTimeout(),
 			}
 			tasque.runWithTimeout()
+		default:
+			log.Panicf("Unknown or no deployment method provided: %s", *deployMethod)
 		}
 	} else {
 		// CLI Mode

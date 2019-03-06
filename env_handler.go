@@ -1,7 +1,10 @@
 package main
 
-import "os"
-import "github.com/blaines/tasque-go/result"
+import (
+	"os"
+
+	"github.com/blaines/tasque-go/result"
+)
 
 // ENVHandler hello world
 type ENVHandler struct {
