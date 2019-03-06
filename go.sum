@@ -7,6 +7,7 @@ github.com/blaines/tasque-go v0.0.0-20180126062912-3aeadec7a23e h1:9E9HY8T2jd2Wn
 github.com/blaines/tasque-go v0.0.0-20180126062912-3aeadec7a23e/go.mod h1:poh/pcBJj8o13pwffmH/YCtsOpq1vd+VJedTgKuTkI4=
 github.com/containerd/continuity v0.0.0-20181203112020-004b46473808 h1:4BX8f882bXEDKfWIf0wa8HRvpnBoPszJJXL+TVbBw4M=
 github.com/containerd/continuity v0.0.0-20181203112020-004b46473808/go.mod h1:GL3xCUCBDV3CZiTSEKksMWbLE66hEyuu9qyDOOqM47Y=
+github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/docker/docker v0.7.3-0.20190212235812-0111ee70874a h1:JQ6Y5gOtbAEvQBAizw9wEt036d099RKmzsRJbwX/c7E=
 github.com/docker/docker v0.7.3-0.20190212235812-0111ee70874a/go.mod h1:eEKB0N0r5NX/I1kEveEz05bcu8tLC/8azJZsviup8Sk=

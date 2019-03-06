@@ -3,6 +3,7 @@ module github.com/Skycatch/tasque-go
 require (
 	github.com/aws/aws-sdk-go v1.17.11
 	github.com/blaines/tasque-go v0.0.0-20180126062912-3aeadec7a23e
+	github.com/davecgh/go-spew v1.1.1
 	github.com/fsouza/go-dockerclient v1.3.6
 	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/golang/protobuf v1.3.0 // indirect
@@ -23,7 +24,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect
 	k8s.io/api v0.0.0-20190111032252-67edc246be36
-	k8s.io/apimachinery v0.0.0-20190301173222-2f7e9cae4418 // indirect
+	k8s.io/apimachinery v0.0.0-20190301173222-2f7e9cae4418
 	k8s.io/client-go v10.0.0+incompatible
 	k8s.io/klog v0.2.0 // indirect
 	sigs.k8s.io/yaml v1.1.0 // indirect
