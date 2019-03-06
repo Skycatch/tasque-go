@@ -86,6 +86,6 @@ func (r AWSEKS) Execute(handler MessageHandler) {
 
 // Result gets the result of the execution
 func (r AWSEKS) Result() result.Result {
-
+	// TODO David: This needs to be worked out. Store the result instead of in-line return.
 	return result.Result{}
 }
