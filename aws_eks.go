@@ -93,8 +93,6 @@ func (r AWSEKS) Execute(handler MessageHandler) {
 								},
 								{Name: "SKYAPI_URL", Value: "https://api.skycatch.com/v1/"},
 								{Name: "TASK_PAYLOAD", Value: *(handler.body())},
-								{Name: "AWS_ACCESS_KEY_ID", Value: "AKIAJHHTONQ4UYRHABGQ"},
-								{Name: "AWS_SECRET_ACCESS_KEY", Value: "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"},
 							},
 							Resources: v1.ResourceRequirements{
 								Limits: v1.ResourceList{
