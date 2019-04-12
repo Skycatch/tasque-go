@@ -1,3 +1,3 @@
 FROM centurylink/ca-certs
-ADD tasque /
+COPY tasque /tasque
 CMD ["/tasque"]

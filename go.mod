@@ -3,6 +3,7 @@ module github.com/Skycatch/tasque-go
 require (
 	github.com/aws/aws-sdk-go v1.18.4
 	github.com/blaines/tasque-go v0.0.0-20180126062912-3aeadec7a23e
+	github.com/davecgh/go-spew v1.1.1
 	github.com/fsouza/go-dockerclient v1.3.6
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gogo/protobuf v1.2.1 // indirect

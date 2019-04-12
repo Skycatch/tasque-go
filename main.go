@@ -92,9 +92,6 @@ func main() {
 			tasque.runWithTimeout()
 		case "EKS":
 			kubeConfigPath := os.Getenv("KUBE_CONFIG_PATH")
-			if kubeConfigPath == "" {
-				panic("Environment variable KUBE_CONFIG_PATH not set")
-			}
 			dockerImage := os.Getenv("VW_DOCKER_IMAGE")
 			if dockerImage == "" {
 				panic("Environment variable VW_DOCKER_IMAGE not set")

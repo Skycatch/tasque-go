@@ -17,3 +17,4 @@ build:
 
 upload:
 	docker push tasque/tasque
+
