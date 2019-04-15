@@ -13,4 +13,4 @@ build:
 	docker build -t tasque/tasque:${arch} .
 
 upload:
-	docker push tasque/tasque:${arch}
+	docker push tasque/tasque
