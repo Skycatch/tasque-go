@@ -17,27 +17,6 @@ type Tasque struct {
 	Executable ExecutableInterface
 }
 
-// Support three modes of operation
-// -e environment variable TASK_PAYLOAD
-// -i standard input
-// -f file output
-// TODO:
-// func main() {
-// 	c := cli.NewCLI("app", "1.0.0")
-// 	c.Args = os.Args[1:]
-// 	c.Commands = map[string]cli.CommandFactory{
-// 	// "foo": fooCommandFactory,
-// 	// "bar": barCommandFactory,
-// 	}
-//
-// 	exitStatus, err := c.Run()
-// 	if err != nil {
-// 		log.Println(err)
-// 	}
-//
-// 	os.Exit(exitStatus)
-// }
-
 func main() {
 	var taskDefinition *string
 	var overridePayloadKey *string
