@@ -1,0 +1,23 @@
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: volumetric-worker
+  name: volumetric-worker
+rules:
+- apiGroups: ["batch"] 
+  resources: ["*"]
+  verbs: ["*"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: volumetric-worker
+  namespace: volumetric-worker
+subjects:
+- kind: User
+  name: system:serviceaccount:volumetric-worker:default
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: volumetric-worker
+  apiGroup: rbac.authorization.k8s.io
