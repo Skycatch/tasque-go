@@ -75,10 +75,18 @@ func main() {
 			if dockerImage == "" {
 				panic("Environment variable VW_DOCKER_IMAGE not set")
 			}
-			tasque.Executable = &AWSEKS{
-				DockerImage:    dockerImage,
-				KubeConfigPath: kubeConfigPath,
+			roleArn := os.Getenv("VW_ROLE_ARN")
+			if roleArn == "" {
+				panic("Environment variable VW_ROLE_ARN not set")
 			}
+			tasque.Executable = &AWSEKS{
+				DockerImage:       dockerImage,
+				KubeConfigPath:    kubeConfigPath,
+				heartbeatDuration: time.Second * 60,
+				Timeout:           getTimeout(),
+				RoleArn:           roleArn,
+			}
+
 			tasque.runWithTimeout()
 		case "ECS":
 			// ECS_TASK_DEFINITION
