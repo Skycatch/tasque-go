@@ -4,7 +4,7 @@ metadata:
   namespace: volumetric-worker
   name: volumetric-worker
 rules:
-- apiGroups: ["batch"] 
+- apiGroups: ["*"] 
   resources: ["*"]
   verbs: ["*"]
 ---
