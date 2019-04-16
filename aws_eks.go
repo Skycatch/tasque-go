@@ -64,8 +64,7 @@ func (r AWSEKS) Execute(handler MessageHandler) {
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "vw-",
 			Annotations: map[string]string{
-				// TODO David: this cannot be hardcoded. Needs to come from Lambda.
-				"iam.amazonaws.com/role": "arn:aws:iam::533689966658:role/volumetrics_worker",
+				"iam.amazonaws.com/role": r.RoleArn,
 			},
 		},
 		Spec: v1.PodSpec{
