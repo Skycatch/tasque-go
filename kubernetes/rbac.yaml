@@ -4,8 +4,8 @@ metadata:
   namespace: volumetric-worker
   name: volumetric-worker
 rules:
-- apiGroups: ["*"] 
-  resources: ["*"]
+- apiGroups: [""] 
+  resources: ["pods"]
   verbs: ["*"]
 ---
 kind: ClusterRoleBinding
