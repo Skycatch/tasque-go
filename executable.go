@@ -122,9 +122,8 @@ func executionHelper(binary string, executableArguments []string, messageBody *s
 			exitCode = exitErr.Sys().(syscall.WaitStatus).ExitStatus()
 			log.Printf("An error occured (%s %d)\n", binary, exitCode)
 			log.Println(err)
-		} else {
-			return err
 		}
+		return err
 	}
 
 	return nil
