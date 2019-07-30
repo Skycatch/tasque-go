@@ -16,13 +16,14 @@ import (
 
 // Executable hello world
 type Executable struct {
-	binary    string
-	arguments []string
-	stdin     bufio.Scanner
-	stdout    bufio.Scanner
-	stderr    bufio.Scanner
-	timeout   time.Duration
-	result    result.Result
+	binary            string
+	arguments         []string
+	stdin             bufio.Scanner
+	stdout            bufio.Scanner
+	stderr            bufio.Scanner
+	timeout           time.Duration
+	result            result.Result
+	heartbeatDuration time.Duration
 }
 
 func (executable *Executable) Execute(handler MessageHandler) {
@@ -36,6 +37,19 @@ func (executable *Executable) Result() result.Result {
 func (executable *Executable) execute(handler MessageHandler) {
 	handler.initialize()
 	if handler.receive() {
+		if executable.heartbeatDuration.String() != "0s" {
+			ticker := time.NewTicker(executable.heartbeatDuration)
+
+			go func() {
+				for _ = range ticker.C {
+					handler.heartbeat()
+				}
+			}()
+
+			defer func() {
+				ticker.Stop()
+			}()
+		}
 		executable.executableTimeoutHelper(handler)
 	}
 }
@@ -45,6 +59,7 @@ func (executable *Executable) executableTimeoutHelper(handler MessageHandler) {
 	go func() {
 		ch <- executionHelper(executable.binary, executable.arguments, handler.body(), handler.id())
 	}()
+
 	select {
 	case err := <-ch:
 		if err != nil {
