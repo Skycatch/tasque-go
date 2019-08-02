@@ -110,8 +110,6 @@ func outputPipe(pipe io.ReadCloser, annotation string, wg *sync.WaitGroup, colle
 }
 
 func (executable *Executable) executionHelper(handler MessageHandler) (*string, error) {
-	// ch <- executionHelper(executable.binary, executable.arguments, handler.body(), handler.id())
-	// binary string, executableArguments []string, messageBody *string, messageID *string, collectResponse bool
 	var exitCode int
 	var err error
 	var stdinPipe io.WriteCloser
@@ -153,17 +151,14 @@ func (executable *Executable) executionHelper(handler MessageHandler) (*string, 
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			exitCode = exitErr.Sys().(syscall.WaitStatus).ExitStatus()
 			log.Printf("An error occured (%s %d)\n", executable.binary, exitCode)
-			log.Println(err)
-			// t := Test{}
-			result := executable.result
-			if err := json.Unmarshal([]byte(*stderrResponse), &result); err != nil {
-				fmt.Println(err)
-			}
-			// executable.result.SetExit(string(exitCode))
-			// fmt.Println(*stderrResponse)
-			fmt.Println(strconv.Itoa(exitCode))
 			
-			fmt.Printf("%+v\n", result)
+			var errorData map[string]interface{}
+			json.Unmarshal([]byte(*stderrResponse), &errorData)
+
+			executable.result.Exit = strconv.Itoa(exitCode)
+			if errorData["error"] != nil {
+				executable.result.Error = fmt.Sprintf("%v", errorData["error"])
+			}
 		}
 		return nil, err
 	}

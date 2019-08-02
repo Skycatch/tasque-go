@@ -1,0 +1,6 @@
+FROM tasque/tasque:amd64 as tasque
+FROM node:12.7.0-stretch-slim
+COPY --from=tasque /tasque /tasque
+COPY ./test.js /test.js
+ENTRYPOINT ["/tasque"]
+CMD ["node", "test.js"]

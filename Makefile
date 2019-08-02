@@ -5,6 +5,7 @@ build_date = $(shell date '+%y-%m-%d %H:%M)
 version = $(shell cat VERSION)
 arch ?= amd64
 docker_repo = 770136283015.dkr.ecr.us-west-2.amazonaws.com/tasque-go
+docker_tag ?= latest
 region = us-west-2
 registry_id = 770136283015
 docker-login:
@@ -13,7 +14,7 @@ docker-login:
 	@echo "Logging in"
 	@$(loginstring)
 
-build: docker-login
+build:
 	docker build \
 		--no-cache \
 		--build-arg arch=${arch} \
@@ -23,7 +24,7 @@ build: docker-login
 		--build-arg git_sha=${git_sha} \
 		--build-arg git_branch=${git_branch} \
 		-t tasque/tasque:${arch} .
-	docker tag tasque/tasque:${arch} ${docker_repo}
+	docker tag tasque/tasque:${arch} ${docker_repo}:${docker_tag}
 
 push: docker-login
-	docker push ${docker_repo}
+	docker push ${docker_repo}:${docker_tag}

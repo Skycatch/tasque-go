@@ -1,4 +1,4 @@
-package result
+package main
 
 import (
 	"bytes"
@@ -8,8 +8,8 @@ import (
 )
 
 type Result struct {
-	Exit  string `json:"cause"`
-	Error string `json:"cause"`
+	Exit  string
+	Error string
 	host  string  
 }
 
