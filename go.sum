@@ -5,14 +5,14 @@ github.com/Microsoft/go-winio v0.4.11 h1:zoIOcVf0xPN1tnMVbTtEdI+P8OofVk3NObnwOQ6
 github.com/Microsoft/go-winio v0.4.11/go.mod h1:VhR8bwka0BXejwEJY73c50VrPtXAaKcyvVC4A4RozmA=
 github.com/aws/aws-sdk-go v1.18.4 h1:zqlGJ5hF7CqFkQe5nprfaxo50QXsB1hf74QpQKPYtGY=
 github.com/aws/aws-sdk-go v1.18.4/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
-github.com/blaines/tasque-go v0.0.0-20180126062912-3aeadec7a23e h1:9E9HY8T2jd2Wn2DCSqCcbVlgI9qxThIRFZauf5G1Ah4=
+github.com/blaines/tasque-go v0.0.0-20180126062912-3aeadec7a23e h1:hbbHP9pJUppojAFuXCMDiL9tDF+co7lIBX/10HfEUpw=
 github.com/blaines/tasque-go v0.0.0-20180126062912-3aeadec7a23e/go.mod h1:poh/pcBJj8o13pwffmH/YCtsOpq1vd+VJedTgKuTkI4=
 github.com/containerd/continuity v0.0.0-20181203112020-004b46473808 h1:4BX8f882bXEDKfWIf0wa8HRvpnBoPszJJXL+TVbBw4M=
 github.com/containerd/continuity v0.0.0-20181203112020-004b46473808/go.mod h1:GL3xCUCBDV3CZiTSEKksMWbLE66hEyuu9qyDOOqM47Y=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/docker/docker v0.7.3-0.20190212235812-0111ee70874a h1:JQ6Y5gOtbAEvQBAizw9wEt036d099RKmzsRJbwX/c7E=
+github.com/docker/docker v0.7.3-0.20190212235812-0111ee70874a h1:r64ncoybKAgtiM9jIPurN/P+9qc1hIF78FYWe6KD7Aw=
 github.com/docker/docker v0.7.3-0.20190212235812-0111ee70874a/go.mod h1:eEKB0N0r5NX/I1kEveEz05bcu8tLC/8azJZsviup8Sk=
 github.com/docker/go-connections v0.4.0 h1:El9xVISelRB7BuFusrZozjnkIM5YnzCViNKohAFqRJQ=
 github.com/docker/go-connections v0.4.0/go.mod h1:Gbd7IOopHjR8Iph03tsViu4nIes5XhDvyHbTtUxmeec=
@@ -114,7 +114,7 @@ k8s.io/api v0.0.0-20181128191700-6db15a15d2d3 h1:yU+uHaWFaeWjRoVDuKI2qxcOP9PPFJ+
 k8s.io/api v0.0.0-20181128191700-6db15a15d2d3/go.mod h1:iuAfoD4hCxJ8Onx9kaTIt30j7jUFS00AXQi6QMi99vA=
 k8s.io/apimachinery v0.0.0-20190313115320-c9defaaddf6f h1:6ojhffWUv9DZ8i4L2LIvSjbWH3fXfP6PmrTNwXHHMhM=
 k8s.io/apimachinery v0.0.0-20190313115320-c9defaaddf6f/go.mod h1:ccL7Eh7zubPUSh9A3USN90/OzHNSVN6zxzde07TDCL0=
-k8s.io/client-go v2.0.0-alpha.0.0.20190115164855-701b91367003+incompatible h1:caxMXCWEx53s6NddC6ME+TGLOpplJ0pVTlcK+ghtRwY=
+k8s.io/client-go v2.0.0-alpha.0.0.20190115164855-701b91367003+incompatible h1:Qw/ADzXV2yX+39UUCwNcZmdNS4+sR+V2Jf9NBdZWlQg=
 k8s.io/client-go v2.0.0-alpha.0.0.20190115164855-701b91367003+incompatible/go.mod h1:7vJpHMYJwNQCWgzmNV+VYUl1zCObLyodBc8nIyt8L5s=
 k8s.io/klog v0.2.0 h1:0ElL0OHzF3N+OhoJTL0uca20SxtYt4X4+bzHeqrB83c=
 k8s.io/klog v0.2.0/go.mod h1:Gq+BEi5rUBO/HRz0bTSXDUcqjScdoY3a9IHpCEIOOfk=

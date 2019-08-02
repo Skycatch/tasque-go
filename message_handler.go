@@ -8,7 +8,8 @@ type MessageHandler interface {
 	body() *string
 	initialize()
 	receive() bool
-	success()
+	success(*string)
 	failure(err result.Result)
 	heartbeat()
+	returnResult() bool
 }

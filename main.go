@@ -1,12 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"os"
 	"strings"
 	"time"
-
-	"encoding/json"
 
 	"github.com/aws/aws-sdk-go/aws"
 )
@@ -143,6 +142,7 @@ func (tasque *Tasque) getHandler() {
 	taskPayload := os.Getenv("TASK_PAYLOAD")
 	taskQueueURL := os.Getenv("TASK_QUEUE_URL")
 	activityARN := os.Getenv("TASK_ACTIVITY_ARN")
+	returnResult := os.Getenv("RETURN_RESULT") != ""
 	if taskPayload != "" {
 		handler = &ENVHandler{}
 	} else if taskQueueURL != "" {
@@ -150,6 +150,7 @@ func (tasque *Tasque) getHandler() {
 	} else if activityARN != "" {
 		handler = &SFNHandler{
 			activityARN: activityARN,
+			returnActivityResult: returnResult,
 		}
 	} else {
 		panic("No handler")

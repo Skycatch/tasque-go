@@ -82,6 +82,16 @@ TASK_QUEUE_URL
 
 TASK_TIMEOUT
 
+#### Passing job response to SFN activity
+To pass job response to step function activity
+```
+RETURN_RESULT=true TASK_ACTIVITY_ARN=arn:aws:states:us-west-2:533689966658:activity:demo-sfn-response-activity ./tasque node test.js
+```
+##### Constraints:
+- works only with direct execution handler
+- job should respond with JSON string to stdout
+
+
 #### Error Translation Variables
 
 Your application should use a non-zero exit status upon failure. There are 255 valid non-zero exit codes, and some are specially reserved (http://tldp.org/LDP/abs/html/exitcodes.html). To accommodate for this limitation Tasque will capture and raise those errors depending on it's messaging handler.

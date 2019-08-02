@@ -334,7 +334,7 @@ func (dockerobj *AWSDOCKER) dockerobjTimeoutHelper(handler MessageHandler) {
 			handler.failure(dockerobj.result)
 		} else {
 			log.Printf("I: %s finished successfully", dockerobj.containerName)
-			handler.success()
+			handler.success(nil)
 		}
 	case <-time.After(dockerobj.timeout):
 		err := fmt.Errorf("%s timed out after %f seconds", dockerobj.containerName, dockerobj.timeout.Seconds())

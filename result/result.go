@@ -8,9 +8,9 @@ import (
 )
 
 type Result struct {
-	Exit  string
-	Error string
-	host  string
+	Exit  string `json:"cause"`
+	Error string `json:"cause"`
+	host  string  
 }
 
 func New() Result {
