@@ -15,11 +15,7 @@ import (
 
 	"github.com/blaines/tasque-go/result"
 )
-type Test struct {
-	Exit string `json:"cause"`
-	Error string `json:"error"`
-	host string
-}
+
 // Executable hello world
 type Executable struct {
 	binary    string
