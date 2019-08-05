@@ -90,6 +90,8 @@ RETURN_RESULT=true TASK_ACTIVITY_ARN=arn:aws:states:us-west-2:533689966658:activ
 ##### Constraints:
 - works only with direct execution handler
 - job should respond with JSON string to stdout
+- on error should respond with JSON containing "error" key to stderr  
+More details in [spec](https://skycatch.atlassian.net/wiki/spaces/SKYAPI/pages/885751816/Pass+back+response+errors+from+pipeline+workers)
 
 
 #### Error Translation Variables
