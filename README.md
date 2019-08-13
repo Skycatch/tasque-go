@@ -82,15 +82,32 @@ TASK_QUEUE_URL
 
 TASK_TIMEOUT
 
-#### Passing job response to SFN activity
-To pass job response to step function activity
+#### Passing job response back to the step function
+To pass job response to the step function worker should   
+print `-=result=-` to stdout, in this case tasque will capture the next  
+string and pass it to the sfn as a payload
+
+To pass error to the step function worker should print `-=error=-`  
+to stderr, and then provide an error payload to the stderr.  
+Worker should exit with non-zero exit code.  
+
+Success response example
 ```
-RETURN_RESULT=true TASK_ACTIVITY_ARN=arn:aws:states:us-west-2:533689966658:activity:demo-sfn-response-activity ./tasque node test.js
+console.log('-=result=-')
+console.log(JSON.stringify({ result: 'some-result' }))
 ```
+Error response example
+```
+console.log('-=error=-')
+console.log(JSON.stringify({ error: 'IncorrectArgument' }))
+process.exit(1)
+```
+
 ##### Constraints:
 - works only with direct execution handler
-- job should respond with JSON string to stdout
-- on error should respond with JSON containing "error" key to stderr  
+- works only for sfn and token handlers
+- error payload should contain `error` key  
+
 More details in [spec](https://skycatch.atlassian.net/wiki/spaces/SKYAPI/pages/885751816/Pass+back+response+errors+from+pipeline+workers)
 
 
