@@ -96,6 +96,3 @@ func (handler *SQSHandler) success(*string) {
 
 func (handler *SQSHandler) failure(err result.Result) {}
 func (handler *SQSHandler) heartbeat()                {}
-func (handler *SQSHandler) returnResult() bool {
-	return false
-}

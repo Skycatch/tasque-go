@@ -142,15 +142,19 @@ func (tasque *Tasque) getHandler() {
 	taskPayload := os.Getenv("TASK_PAYLOAD")
 	taskQueueURL := os.Getenv("TASK_QUEUE_URL")
 	activityARN := os.Getenv("TASK_ACTIVITY_ARN")
-	returnResult := os.Getenv("RETURN_RESULT") != ""
-	if taskPayload != "" {
+	taskToken := os.Getenv("TASK_TOKEN")
+
+	if taskToken != "" {
+		handler = &TokenHandler{
+			taskToken: taskToken,
+		}
+	} else if taskPayload != "" {
 		handler = &ENVHandler{}
 	} else if taskQueueURL != "" {
 		handler = &SQSHandler{}
 	} else if activityARN != "" {
 		handler = &SFNHandler{
 			activityARN: activityARN,
-			returnActivityResult: returnResult,
 		}
 	} else {
 		panic("No handler")

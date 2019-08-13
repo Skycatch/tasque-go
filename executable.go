@@ -2,19 +2,23 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
-	"encoding/json"
-	"strconv"
 
 	"github.com/blaines/tasque-go/result"
 )
+
+const RESULT_PATTERN string = "-=result=-"
+const ERROR_PATTERN string = "-=error=-"
 
 // Executable hello world
 type Executable struct {
@@ -78,11 +82,12 @@ func inputPipe(pipe io.WriteCloser, inputString *string, wg *sync.WaitGroup) {
 	}()
 }
 
-func outputPipe(pipe io.ReadCloser, annotation string, wg *sync.WaitGroup, collectResponse bool) *string {
+func outputPipe(pipe io.ReadCloser, annotation string, wg *sync.WaitGroup) *string {
 	wg.Add(1)
 	pipeScanner := bufio.NewScanner(pipe)
 	ch := make(chan string)
 	var response string
+	var isResponseString bool
 
 	go func() {
 		for pipeScanner.Scan() {
@@ -99,8 +104,13 @@ func outputPipe(pipe io.ReadCloser, annotation string, wg *sync.WaitGroup, colle
 		if !more {
 			return &response
 		}
-		if collectResponse {
-			response += output
+		if isResponseString {
+			response = output
+		}
+		if strings.Contains(output, RESULT_PATTERN) || strings.Contains(output, ERROR_PATTERN) {
+			isResponseString = true
+		} else {
+			isResponseString = false
 		}
 	}
 }
@@ -136,8 +146,8 @@ func (executable *Executable) executionHelper(handler MessageHandler) (*string, 
 
 	var wg sync.WaitGroup
 	inputPipe(stdinPipe, handler.body(), &wg)
-	stderrResponse := outputPipe(stderrPipe, fmt.Sprintf("%s %s", *handler.id(), "ERROR"), &wg, handler.returnResult())
-	stdoutResponse := outputPipe(stdoutPipe, fmt.Sprintf("%s", *handler.id()), &wg, handler.returnResult())
+	stderrResponse := outputPipe(stderrPipe, fmt.Sprintf("%s %s", *handler.id(), "ERROR"), &wg)
+	stdoutResponse := outputPipe(stdoutPipe, fmt.Sprintf("%s", *handler.id()), &wg)
 	wg.Wait()
 	if err != nil {
 		return nil, err
@@ -147,7 +157,7 @@ func (executable *Executable) executionHelper(handler MessageHandler) (*string, 
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			exitCode = exitErr.Sys().(syscall.WaitStatus).ExitStatus()
 			log.Printf("An error occured (%s %d)\n", executable.binary, exitCode)
-			
+
 			var errorData map[string]interface{}
 			json.Unmarshal([]byte(*stderrResponse), &errorData)
 

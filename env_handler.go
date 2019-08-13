@@ -29,6 +29,3 @@ func (handler *ENVHandler) receive() bool {
 func (handler *ENVHandler) success(*string)           {}
 func (handler *ENVHandler) failure(err result.Result) {}
 func (handler *ENVHandler) heartbeat()                {}
-func (handler *ENVHandler) returnResult() bool {
-	return true
-}

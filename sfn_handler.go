@@ -15,19 +15,11 @@ import (
 
 // SFNHandler hello world
 type SFNHandler struct {
-	client               sfn.SFN
-	messageBody          string
-	taskToken            string
-	activityARN          string
-	awsRegion            string
-	returnActivityResult bool
-}
-
-// SFNClient hello world
-type SFNClient struct {
+	client      sfn.SFN
+	messageBody string
+	taskToken   string
 	activityARN string
 	awsRegion   string
-	sfnClient   sfn.SFN
 }
 
 func (handler *SFNHandler) id() *string {
@@ -98,7 +90,7 @@ func (handler *SFNHandler) success(result *string) {
 		TaskToken: aws.String(handler.taskToken),
 	}
 
-	if handler.returnResult() {
+	if result != nil && *result != "" {
 		sendTaskSuccessParams.Output = aws.String(*result)
 	}
 
@@ -132,8 +124,4 @@ func (handler *SFNHandler) heartbeat() {
 	if deleteMessageError != nil {
 		return
 	}
-}
-
-func (handler *SFNHandler) returnResult() bool {
-	return handler.returnActivityResult
 }

@@ -11,5 +11,4 @@ type MessageHandler interface {
 	success(*string)
 	failure(err result.Result)
 	heartbeat()
-	returnResult() bool
 }
