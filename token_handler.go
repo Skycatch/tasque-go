@@ -29,8 +29,7 @@ func (handler *TokenHandler) body() *string {
 
 func (handler *TokenHandler) initialize() {
 	log.Printf("Configuring handler. token:%s", handler.taskToken)
-	// &aws.Config{Region: aws.String(handler.region)}
-	sess, err := session.NewSession()
+	sess, err := session.NewSession(&aws.Config{Region: aws.String(handler.region)})
 	if err != nil {
 		fmt.Println("failed to create session,", err)
 		panic("failed to create session")
