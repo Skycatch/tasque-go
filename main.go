@@ -147,7 +147,7 @@ func (tasque *Tasque) getHandler() {
 	if taskToken != "" {
 		handler = &TokenHandler{
 			taskToken: taskToken,
-			region: os.Getenv("AWS_REGION")
+			region: os.Getenv("AWS_REGION"),
 		}
 	} else if taskPayload != "" {
 		handler = &ENVHandler{}
