@@ -144,7 +144,7 @@ func (r AWSEKS) Execute(handler MessageHandler) {
 						return
 					case "Succeeded":
 						defer os.Exit(0)
-						handler.success()
+						handler.success(nil)
 						return
 					}
 				}

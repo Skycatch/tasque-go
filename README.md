@@ -82,6 +82,35 @@ TASK_QUEUE_URL
 
 TASK_TIMEOUT
 
+#### Passing job response back to the step function
+To pass job response to the step function worker should   
+print `-=result=-` to stdout, in this case tasque will capture the next  
+string and pass it to the sfn as a payload
+
+To pass error to the step function worker should print `-=error=-`  
+to stderr, and then provide an error payload to the stderr.  
+Worker should exit with non-zero exit code.  
+
+Success response example
+```
+console.log('-=result=-')
+console.log(JSON.stringify({ result: 'some-result' }))
+```
+Error response example
+```
+console.log('-=error=-')
+console.log(JSON.stringify({ error: 'IncorrectArgument' }))
+process.exit(1)
+```
+
+##### Constraints:
+- works only with direct execution handler
+- works only for sfn and token handlers
+- error payload should contain `error` key  
+
+More details in [spec](https://skycatch.atlassian.net/wiki/spaces/SKYAPI/pages/885751816/Pass+back+response+errors+from+pipeline+workers)
+
+
 #### Error Translation Variables
 
 Your application should use a non-zero exit status upon failure. There are 255 valid non-zero exit codes, and some are specially reserved (http://tldp.org/LDP/abs/html/exitcodes.html). To accommodate for this limitation Tasque will capture and raise those errors depending on it's messaging handler.

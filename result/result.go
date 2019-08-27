@@ -1,4 +1,4 @@
-package result
+package main
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 type Result struct {
 	Exit  string
 	Error string
-	host  string
+	host  string  
 }
 
 func New() Result {
