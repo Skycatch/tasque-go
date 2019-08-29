@@ -2,17 +2,21 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
-
-	"github.com/blaines/tasque-go/result"
 )
+
+const RESULT_PATTERN string = "-=result=-"
+const ERROR_PATTERN string = "-=error=-"
 
 // Executable hello world
 type Executable struct {
@@ -55,26 +59,33 @@ func (executable *Executable) execute(handler MessageHandler) {
 }
 
 func (executable *Executable) executableTimeoutHelper(handler MessageHandler) {
-	ch := make(chan error)
+	errorChannel := make(chan error)
+	responseChannel := make(chan *string)
 	go func() {
-		ch <- executionHelper(executable.binary, executable.arguments, handler.body(), handler.id())
-	}()
-
-	select {
-	case err := <-ch:
-		if err != nil {
-			log.Printf("E: %s %s", executable.binary, err.Error())
-			handler.failure(executable.result)
+		if response, err := executable.executionHelper(handler); err != nil {
+			errorChannel <- err
 		} else {
-			log.Printf("I: %s finished successfully", executable.binary)
-			handler.success()
+			responseChannel <- response
 		}
+	}()
+	select {
+	case err := <-errorChannel:
+		log.Printf("E: %s %s", executable.binary, err.Error())
+		handler.failure(executable.result)
+	case response := <-responseChannel:
+		log.Printf("I: %s finished successfully", executable.binary)
+		handler.success(response)
 	case <-time.After(executable.timeout):
 		log.Printf("E: %s timed out after %f seconds", executable.binary, executable.timeout.Seconds())
 	}
+
+	defer func() {
+		close(errorChannel)
+		close(responseChannel)
+	}()
 }
 
-func inputPipe(pipe io.WriteCloser, inputString *string, wg *sync.WaitGroup, e *error) {
+func inputPipe(pipe io.WriteCloser, inputString *string, wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		io.WriteString(pipe, *inputString)
@@ -83,18 +94,32 @@ func inputPipe(pipe io.WriteCloser, inputString *string, wg *sync.WaitGroup, e *
 	}()
 }
 
-func outputPipe(pipe io.ReadCloser, annotation string, wg *sync.WaitGroup, e *error) {
-	wg.Add(1)
+func outputPipe(pipe io.ReadCloser, annotation string, result chan *string) {
 	pipeScanner := bufio.NewScanner(pipe)
-	go func() {
-		for pipeScanner.Scan() {
-			log.Printf("%s %s\n", annotation, pipeScanner.Text())
+	var response string
+	var isResponseString bool
+
+	for pipeScanner.Scan() {
+		output := pipeScanner.Text()
+		log.Printf("%s %s\n", annotation, output)
+		if isResponseString {
+			response = output
 		}
-		wg.Done()
-	}()
+		if strings.Contains(output, RESULT_PATTERN) || strings.Contains(output, ERROR_PATTERN) {
+			isResponseString = true
+		} else {
+			isResponseString = false
+		}
+	}
+
+	if (response != "") {
+		result <- &response
+	} else {
+		close(result)
+	}
 }
 
-func executionHelper(binary string, executableArguments []string, messageBody *string, messageID *string) error {
+func (executable *Executable) executionHelper(handler MessageHandler) (*string, error) {
 	var exitCode int
 	var err error
 	var stdinPipe io.WriteCloser
@@ -102,45 +127,62 @@ func executionHelper(binary string, executableArguments []string, messageBody *s
 	var stderrPipe io.ReadCloser
 
 	environ := os.Environ()
-	environ = append(environ, fmt.Sprintf("TASK_PAYLOAD=%s", *messageBody))
-	environ = append(environ, fmt.Sprintf("TASK_ID=%s", *messageID))
-	command := exec.Command(binary, executableArguments...)
+	environ = append(environ, fmt.Sprintf("TASK_PAYLOAD=%s", *handler.body()))
+	environ = append(environ, fmt.Sprintf("TASK_ID=%s", *handler.id()))
+	command := exec.Command(executable.binary, executable.arguments...)
 	command.Env = environ
 
-	if messageBody != nil {
+	if handler.body() != nil {
 		if stdinPipe, err = command.StdinPipe(); err != nil {
-			return err
+			return nil, err
 		}
 	}
 	if stdoutPipe, err = command.StdoutPipe(); err != nil {
-		return err
+		return nil, err
 	}
 	if stderrPipe, err = command.StderrPipe(); err != nil {
-		return err
+		return nil, err
 	}
 
 	if err = command.Start(); err != nil {
-		return err
+		return nil, err
 	}
 
 	var wg sync.WaitGroup
-	inputPipe(stdinPipe, messageBody, &wg, &err)
-	outputPipe(stderrPipe, fmt.Sprintf("%s %s", *messageID, "ERROR"), &wg, &err)
-	outputPipe(stdoutPipe, fmt.Sprintf("%s", *messageID), &wg, &err)
+	var stdoutResponse *string
+	var stderrResponse *string
+	stderrChan := make(chan *string)
+	stdoutChan := make(chan *string)
+
+	inputPipe(stdinPipe, handler.body(), &wg)
+	go outputPipe(stderrPipe, fmt.Sprintf("%s %s", *handler.id(), "ERROR"), stderrChan)
+	go outputPipe(stdoutPipe, fmt.Sprintf("%s", *handler.id()), stdoutChan)
+
 	wg.Wait()
-	if err != nil {
-		return err
-	}
+
+	stdoutResponse = <- stdoutChan
+	stderrResponse = <- stderrChan
 
 	if err = command.Wait(); err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			exitCode = exitErr.Sys().(syscall.WaitStatus).ExitStatus()
-			log.Printf("An error occured (%s %d)\n", binary, exitCode)
-			log.Println(err)
-		} else {
-			return err
+			log.Printf("An error occured (%s %d)\n", executable.binary, exitCode)
+
+			var errorData map[string]interface{}
+			
+			if stderrResponse != nil {
+				json.Unmarshal([]byte(*stderrResponse), &errorData)
+			}
+
+			executable.result.Exit = strconv.Itoa(exitCode)
+			if errorData["error"] != nil {
+				executable.result.Error = fmt.Sprintf("%v", errorData["error"])
+			} else {
+				executable.result.Error = "ExecutionError"
+			}
 		}
+		return nil, err
 	}
 
-	return nil
+	return stdoutResponse, nil
 }

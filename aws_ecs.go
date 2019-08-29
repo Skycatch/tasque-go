@@ -139,7 +139,7 @@ func (executable *AWSECS) executableTimeoutHelper(handler MessageHandler) {
 			handler.failure(executable.result)
 		} else {
 			log.Printf("I: %s finished successfully", *executable.ecsTaskDefinition)
-			handler.success()
+			handler.success(nil)
 		}
 	case <-time.After(executable.timeout):
 		err := fmt.Errorf("%s timed out after %f seconds", *executable.ecsTaskDefinition, executable.timeout.Seconds())

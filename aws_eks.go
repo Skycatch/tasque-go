@@ -2,25 +2,29 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/davecgh/go-spew/spew"
+	"log"
+	"os"
+	"time"
 
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/watch"
 
 	"github.com/blaines/tasque-go/result"
-	jobsv1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/tools/clientcmd"
-
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 // AWSEKS handles the EKS integration
 type AWSEKS struct {
-	DockerImage    string
-	KubeConfigPath string
+	DockerImage       string
+	KubeConfigPath    string
+	heartbeatDuration time.Duration
+	Timeout           time.Duration
+	RoleArn           string
 }
 
 // Execute executes the Worker on EKS
@@ -54,55 +58,48 @@ func (r AWSEKS) Execute(handler MessageHandler) {
 		clientset, err = kubernetes.NewForConfig(config)
 	}
 
-	batchClient := clientset.BatchV1().Jobs("default")
+	v1Client := clientset.CoreV1().Pods("default")
 
-	job := jobsv1.Job{
+	pod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "vw-",
+			Annotations: map[string]string{
+				"iam.amazonaws.com/role": r.RoleArn,
+			},
 		},
-		Spec: jobsv1.JobSpec{
-			Template: v1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					GenerateName: "vwpod-",
-					Labels: map[string]string{
-						"app": "volumetric-worker",
-					},
-				},
-				Spec: v1.PodSpec{
-					RestartPolicy: "Never",
-					NodeSelector: map[string]string{
-						"beta.kubernetes.io/instance-type": "i3.xlarge",
-					},
-					Containers: []v1.Container{
-						{
-							Name:  "volumetric-worker",
-							Image: r.DockerImage,
-							Env: []v1.EnvVar{
-								{Name: "AWS_REGION", Value: "us-west-2"},
-								{Name: "ENVIRONMENT", Value: "development"},
-								{Name: "SKYAPI_AUDIENCE", Value: "https://api.skycatch.com"},
-								{Name: "SKYAPI_AUTH_URL", Value: "https://skycatch.auth0.com/oauth/token"},
-								{Name: "SKYAPI_CLIENT_ID", Value: "e3BhQzZgKaGlt2TtmZqq06DJH6OrlxvU"},
-								{Name: "SKYAPI_CLIENT_SECRET",
-									ValueFrom: &v1.EnvVarSource{
-										SecretKeyRef: &v1.SecretKeySelector{
-											LocalObjectReference: v1.LocalObjectReference{Name: "skyapi-client-secret"},
-											Key:                  "clientsecret",
-										},
-									},
-								},
-								{Name: "SKYAPI_URL", Value: "https://api.skycatch.com/v1/"},
-								{Name: "TASK_PAYLOAD", Value: *(handler.body())},
-							},
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU: resource.MustParse("2000m"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("500m"),
-									v1.ResourceMemory: resource.MustParse("10Gi"),
+		Spec: v1.PodSpec{
+			RestartPolicy: "Never",
+			NodeSelector: map[string]string{
+				"beta.kubernetes.io/instance-type": "i3.xlarge",
+			},
+			Containers: []v1.Container{
+				{
+					Name:  "volumetric-worker",
+					Image: r.DockerImage,
+					Env: []v1.EnvVar{
+						{Name: "AWS_REGION", Value: "us-west-2"},
+						{Name: "ENVIRONMENT", Value: "development"},
+						{Name: "SKYAPI_AUDIENCE", Value: "https://api.skycatch.com"},
+						{Name: "SKYAPI_AUTH_URL", Value: "https://skycatch.auth0.com/oauth/token"},
+						{Name: "SKYAPI_CLIENT_ID", Value: "e3BhQzZgKaGlt2TtmZqq06DJH6OrlxvU"},
+						{Name: "SKYAPI_CLIENT_SECRET",
+							ValueFrom: &v1.EnvVarSource{
+								SecretKeyRef: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{Name: "skyapi-client-secret"},
+									Key:                  "clientsecret",
 								},
 							},
+						},
+						{Name: "SKYAPI_URL", Value: "https://api.skycatch.com/v1/"},
+						{Name: "TASK_PAYLOAD", Value: *(handler.body())},
+					},
+					Resources: v1.ResourceRequirements{
+						Limits: v1.ResourceList{
+							v1.ResourceCPU: resource.MustParse("2000m"),
+						},
+						Requests: v1.ResourceList{
+							v1.ResourceCPU:    resource.MustParse("500m"),
+							v1.ResourceMemory: resource.MustParse("10Gi"),
 						},
 					},
 				},
@@ -110,13 +107,56 @@ func (r AWSEKS) Execute(handler MessageHandler) {
 		},
 	}
 
-	executedJob, err := batchClient.Create(&job)
+	// Handle heartbeat
+	ticker := time.NewTicker(r.heartbeatDuration)
+	timeout := time.After(r.Timeout)
+	go func() {
+		fmt.Println("Setting up heartbeat handler")
+		for range ticker.C {
+			fmt.Println("Heartbeat ping")
+			handler.heartbeat()
+		}
+	}()
+	fmt.Println("Executing volumetric-worker pod")
+	executedPod, err := v1Client.Create(&pod)
 	if err != nil {
-		handler.failure(result.Result{Error: err.Error(), Exit: fmt.Sprintf("Job %s failed", executedJob.Name)})
+		handler.failure(result.Result{Error: err.Error(), Exit: fmt.Sprintf("VW %s failed", executedPod.Name)})
 	} else {
-		// TODO David: We need to monitor the job till it finishes. It was launched into the cluster but can be long running
-		spew.Dump(executedJob)
-		handler.success()
+		watcher, err := v1Client.Watch(metav1.SingleObject(executedPod.ObjectMeta))
+		if err != nil {
+			handler.failure(result.Result{Error: err.Error(), Exit: fmt.Sprintf("VW %s Failed", executedPod.Name)})
+		}
+		channel := watcher.ResultChan()
+		for {
+			select {
+			case event := <-channel:
+				fmt.Println("Pod event received")
+				switch event.Type {
+				case watch.Modified:
+					pod := event.Object.(*corev1.Pod)
+					fmt.Printf("Handling pod status %s\n", pod.Status.Phase)
+					switch pod.Status.Phase {
+					case "Failed":
+						fallthrough
+					case "Unknown":
+						handler.failure(result.Result{Error: fmt.Sprintf("Pod %s failed", executedPod.Name), Exit: fmt.Sprintf("VW %s Failed", executedPod.Name)})
+						defer os.Exit(1)
+						return
+					case "Succeeded":
+						defer os.Exit(0)
+						handler.success(nil)
+						return
+					}
+				}
+			case <-timeout:
+				log.Printf("[INFO] Instance timeout reached.")
+				err := fmt.Errorf("Pod %s timed out after %d seconds", executedPod.Name, r.Timeout)
+				handler.failure(result.Result{Error: err.Error(), Exit: err.Error()})
+				fmt.Printf(err.Error())
+				defer os.Exit(1)
+				return
+			}
+		}
 	}
 }
 

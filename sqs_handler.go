@@ -82,7 +82,7 @@ func (handler *SQSHandler) receive() bool {
 	return true
 }
 
-func (handler *SQSHandler) success() {
+func (handler *SQSHandler) success(*string) {
 	deleteMessageParams := &sqs.DeleteMessageInput{
 		QueueUrl:      aws.String(handler.queueURL),
 		ReceiptHandle: aws.String(handler.receiptHandle),

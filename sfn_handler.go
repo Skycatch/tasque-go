@@ -22,13 +22,6 @@ type SFNHandler struct {
 	awsRegion   string
 }
 
-// SFNClient hello world
-type SFNClient struct {
-	activityARN string
-	awsRegion   string
-	sfnClient   sfn.SFN
-}
-
 func (handler *SFNHandler) id() *string {
 	// There's no real use for the full token
 	token := handler.taskToken[0:32]
@@ -91,11 +84,16 @@ func (handler *SFNHandler) receive() bool {
 	}
 }
 
-func (handler *SFNHandler) success() {
+func (handler *SFNHandler) success(result *string) {
 	sendTaskSuccessParams := &sfn.SendTaskSuccessInput{
 		Output:    aws.String(handler.messageBody),
 		TaskToken: aws.String(handler.taskToken),
 	}
+
+	if result != nil && *result != "" {
+		sendTaskSuccessParams.Output = aws.String(*result)
+	}
+
 	_, deleteMessageError := handler.client.SendTaskSuccess(sendTaskSuccessParams)
 
 	if deleteMessageError != nil {

@@ -1,13 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"os"
 	"strings"
 	"time"
-
-	"encoding/json"
-
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 )
 
@@ -75,10 +74,18 @@ func main() {
 			if dockerImage == "" {
 				panic("Environment variable VW_DOCKER_IMAGE not set")
 			}
-			tasque.Executable = &AWSEKS{
-				DockerImage:    dockerImage,
-				KubeConfigPath: kubeConfigPath,
+			roleArn := os.Getenv("VW_ROLE_ARN")
+			if roleArn == "" {
+				panic("Environment variable VW_ROLE_ARN not set")
 			}
+			tasque.Executable = &AWSEKS{
+				DockerImage:       dockerImage,
+				KubeConfigPath:    kubeConfigPath,
+				heartbeatDuration: time.Second * 60,
+				Timeout:           getTimeout(),
+				RoleArn:           roleArn,
+			}
+
 			tasque.runWithTimeout()
 		case "ECS":
 			// ECS_TASK_DEFINITION
@@ -115,6 +122,7 @@ func main() {
 	} else {
 		// CLI Mode
 		arguments := os.Args[1:]
+		fmt.Printf("%+v", arguments)
 		if len(os.Args) > 1 {
 			tasque := Tasque{}
 			tasque.Executable = &Executable{
@@ -136,7 +144,14 @@ func (tasque *Tasque) getHandler() {
 	taskPayload := os.Getenv("TASK_PAYLOAD")
 	taskQueueURL := os.Getenv("TASK_QUEUE_URL")
 	activityARN := os.Getenv("TASK_ACTIVITY_ARN")
-	if taskPayload != "" {
+	taskToken := os.Getenv("TASK_TOKEN")
+
+	if taskToken != "" {
+		handler = &TokenHandler{
+			taskToken: taskToken,
+			region: os.Getenv("AWS_REGION"),
+		}
+	} else if taskPayload != "" {
 		handler = &ENVHandler{}
 	} else if taskQueueURL != "" {
 		handler = &SQSHandler{}
@@ -185,7 +200,7 @@ func getTimeout() time.Duration {
 func getHeartbeatTime() time.Duration {
 	taskTimeout := os.Getenv("TASK_HEARTBEAT")
 	if taskTimeout == "" {
-		return 0
+		taskTimeout = "30s"
 	}
 	timeout, err := time.ParseDuration(taskTimeout)
 	log.Println("Heartbeat: ", timeout)
