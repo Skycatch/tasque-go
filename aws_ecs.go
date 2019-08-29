@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/blaines/tasque-go/result"
 	"github.com/fsouza/go-dockerclient"
 	"io/ioutil"
 	"log"
@@ -26,7 +25,7 @@ type AWSECS struct {
 	handler               MessageHandler
 	timeout               time.Duration
 	docker                *Docker
-	result                result.Result
+	result                Result
 }
 
 // Docker hello world
@@ -53,7 +52,7 @@ func (executable AWSECS) Execute(handler MessageHandler) {
 	executable.execute(handler)
 }
 
-func (executable *AWSECS) Result() result.Result {
+func (executable *AWSECS) Result() Result {
 	return executable.result
 }
 

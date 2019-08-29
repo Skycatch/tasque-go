@@ -26,7 +26,7 @@ type Executable struct {
 	stdout            bufio.Scanner
 	stderr            bufio.Scanner
 	timeout           time.Duration
-	result            result.Result
+	result            Result
 	heartbeatDuration time.Duration
 }
 
@@ -34,7 +34,7 @@ func (executable *Executable) Execute(handler MessageHandler) {
 	executable.execute(handler)
 }
 
-func (executable *Executable) Result() result.Result {
+func (executable *Executable) Result() Result {
 	return executable.result
 }
 

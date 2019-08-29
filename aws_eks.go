@@ -9,7 +9,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/watch"
 
-	"github.com/blaines/tasque-go/result"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -120,11 +119,11 @@ func (r AWSEKS) Execute(handler MessageHandler) {
 	fmt.Println("Executing volumetric-worker pod")
 	executedPod, err := v1Client.Create(&pod)
 	if err != nil {
-		handler.failure(result.Result{Error: err.Error(), Exit: fmt.Sprintf("VW %s failed", executedPod.Name)})
+		handler.failure(Result{Error: err.Error(), Exit: fmt.Sprintf("VW %s failed", executedPod.Name)})
 	} else {
 		watcher, err := v1Client.Watch(metav1.SingleObject(executedPod.ObjectMeta))
 		if err != nil {
-			handler.failure(result.Result{Error: err.Error(), Exit: fmt.Sprintf("VW %s Failed", executedPod.Name)})
+			handler.failure(Result{Error: err.Error(), Exit: fmt.Sprintf("VW %s Failed", executedPod.Name)})
 		}
 		channel := watcher.ResultChan()
 		for {
@@ -139,7 +138,7 @@ func (r AWSEKS) Execute(handler MessageHandler) {
 					case "Failed":
 						fallthrough
 					case "Unknown":
-						handler.failure(result.Result{Error: fmt.Sprintf("Pod %s failed", executedPod.Name), Exit: fmt.Sprintf("VW %s Failed", executedPod.Name)})
+						handler.failure(Result{Error: fmt.Sprintf("Pod %s failed", executedPod.Name), Exit: fmt.Sprintf("VW %s Failed", executedPod.Name)})
 						defer os.Exit(1)
 						return
 					case "Succeeded":
@@ -151,7 +150,7 @@ func (r AWSEKS) Execute(handler MessageHandler) {
 			case <-timeout:
 				log.Printf("[INFO] Instance timeout reached.")
 				err := fmt.Errorf("Pod %s timed out after %d seconds", executedPod.Name, r.Timeout)
-				handler.failure(result.Result{Error: err.Error(), Exit: err.Error()})
+				handler.failure(Result{Error: err.Error(), Exit: err.Error()})
 				fmt.Printf(err.Error())
 				defer os.Exit(1)
 				return
@@ -161,7 +160,7 @@ func (r AWSEKS) Execute(handler MessageHandler) {
 }
 
 // Result gets the result of the execution
-func (r AWSEKS) Result() result.Result {
+func (r AWSEKS) Result() Result {
 	// TODO David: This needs to be worked out. Store the result instead of in-line return.
-	return result.Result{}
+	return Result{}
 }

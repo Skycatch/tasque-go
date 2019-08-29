@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/blaines/tasque-go/result"
 	"github.com/fsouza/go-dockerclient"
 )
 
@@ -38,7 +37,7 @@ type AWSDOCKER struct {
 	eventsCh             chan *docker.APIEvents
 	containerArgs        string
 	dockerTaskDefinition DockerTaskDefinition
-	result               result.Result
+	result               Result
 	authData             string
 }
 
@@ -46,7 +45,7 @@ func (dockerobj AWSDOCKER) Execute(handler MessageHandler) {
 	dockerobj.execute(handler)
 }
 
-func (executable *AWSDOCKER) Result() result.Result {
+func (executable *AWSDOCKER) Result() Result {
 	return executable.result
 }
 
