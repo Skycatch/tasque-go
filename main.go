@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 	"time"
-	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 )
 
@@ -122,7 +121,6 @@ func main() {
 	} else {
 		// CLI Mode
 		arguments := os.Args[1:]
-		fmt.Printf("%+v", arguments)
 		if len(os.Args) > 1 {
 			tasque := Tasque{}
 			tasque.Executable = &Executable{
