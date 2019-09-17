@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sfn"
-	"github.com/blaines/tasque-go/result"
 )
 
 type TokenHandler struct {
@@ -59,7 +58,7 @@ func (handler *TokenHandler) success(result *string) {
 	}
 }
 
-func (handler *TokenHandler) failure(err result.Result) {
+func (handler *TokenHandler) failure(err Result) {
 	sendTaskFailureParams := &sfn.SendTaskFailureInput{
 		TaskToken: aws.String(handler.taskToken),
 		Error:     aws.String(err.Error),

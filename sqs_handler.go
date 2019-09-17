@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
-	"github.com/blaines/tasque-go/result"
 )
 
 // SQSHandler hello world
@@ -94,5 +93,5 @@ func (handler *SQSHandler) success(*string) {
 	}
 }
 
-func (handler *SQSHandler) failure(err result.Result) {}
+func (handler *SQSHandler) failure(err Result) {}
 func (handler *SQSHandler) heartbeat()                {}

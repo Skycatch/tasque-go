@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 	"time"
-
 	"github.com/aws/aws-sdk-go/aws"
 )
 
@@ -125,9 +124,10 @@ func main() {
 		if len(os.Args) > 1 {
 			tasque := Tasque{}
 			tasque.Executable = &Executable{
-				binary:    arguments[0],
-				arguments: arguments[1:],
-				timeout:   getTimeout(),
+				binary:            arguments[0],
+				arguments:         arguments[1:],
+				timeout:           getTimeout(),
+				heartbeatDuration: getHeartbeatTime(),
 			}
 			tasque.runWithTimeout()
 		} else {
@@ -198,11 +198,10 @@ func getTimeout() time.Duration {
 func getHeartbeatTime() time.Duration {
 	taskTimeout := os.Getenv("TASK_HEARTBEAT")
 	if taskTimeout == "" {
-		log.Println("Default timeout: 30s")
-		timeout, _ := time.ParseDuration("30s")
-		return timeout
+		taskTimeout = "30s"
 	}
 	timeout, err := time.ParseDuration(taskTimeout)
+	log.Println("Heartbeat: ", timeout)
 	if err != nil {
 		log.Println(err.Error())
 		os.Exit(1)

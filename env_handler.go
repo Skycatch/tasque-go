@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/blaines/tasque-go/result"
 	"os"
 )
 
@@ -27,5 +26,5 @@ func (handler *ENVHandler) receive() bool {
 }
 
 func (handler *ENVHandler) success(*string)           {}
-func (handler *ENVHandler) failure(err result.Result) {}
+func (handler *ENVHandler) failure(err Result)        {}
 func (handler *ENVHandler) heartbeat()                {}
