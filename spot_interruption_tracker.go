@@ -32,12 +32,13 @@ type InstanceAction struct {
 func NewTracker() *SpotInterruptionTracker {
 	return &SpotInterruptionTracker{
 		client: &http.Client{Timeout: 5 * time.Second},
-		interval: 3 * time.Second,
+		interval: 1 * time.Minute,
 		url: url,
 	}
 }
 
 func (tracker *SpotInterruptionTracker) Track(result chan bool) {
+	fmt.Printf("Starting instance interruption tracking with %s interval\n", tracker.interval.String())
 	ticker := time.NewTicker(tracker.interval)
 	tracker.ticker = ticker
 
@@ -57,44 +58,39 @@ func (tracker *SpotInterruptionTracker) Untrack() {
 }
 
 func (tracker *SpotInterruptionTracker) isInterrupting() bool {
-	instanceAction := tracker.getInstanceAction()
+	instanceAction, err := tracker.getInstanceAction()
+	if err != nil {
+		log.Printf("%s %s", "Interruption tracker |", err.Error())
+		return false
+	}
 	return instanceAction == actionStop || instanceAction == actionTerminate
 }
 
-func (tracker *SpotInterruptionTracker) getInstanceAction() string {
+func (tracker *SpotInterruptionTracker) getInstanceAction() (string, error) {
 	req, err := http.NewRequest("GET", tracker.url, nil)
 	if err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
 	resp, err := tracker.client.Do(req)
 	if err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	if (resp.StatusCode == 404) {
-		return "Not found"
+		return "Not found", nil
 	}
 
 	if resp.StatusCode == 200 {
 		instanceAction := &InstanceAction{}
 		body, _ := ioutil.ReadAll(resp.Body)
+		fmt.Println("Interruption tracker | response body: ", string(body))
 		if err := json.Unmarshal(body, instanceAction); err != nil {
 			fmt.Println(string(body))
-			panic(err)
+			return "", err
 		}
-		return instanceAction.Action
+		return instanceAction.Action, nil
 	}
-	panic("Spot instance metadata service did not return 200")
+
+	return "", fmt.Errorf("Spot instance metadata service returned %d code", resp.StatusCode)
 }
-
-// func main() {
-// 	tracker := NewTracker()
-// 	tracker.url = "http://localhost:8080"
-// 	result := make(chan bool)
-// 	go tracker.Track(result)
-
-// 	time.Sleep(10 * time.Second)
-// 	tracker.Untrack()
-// 	// <- result
-// }

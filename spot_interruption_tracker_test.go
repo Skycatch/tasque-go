@@ -15,7 +15,6 @@ type HttpClientMock struct {
 	status int
 }
 
-
 func (c *HttpClientMock) Do(req *http.Request) (*http.Response, error) {
 	return c.createResponse()
 }
@@ -33,13 +32,6 @@ func (c *HttpClientMock) createResponse() (*http.Response, error) {
 	}, nil
 }
 
-func createTracker(client HttpClient) *SpotInterruptionTracker {
-	return &SpotInterruptionTracker{
-		client: client,
-		interval: (1 * time.Millisecond),
-	}
-}
-
 func createClient(body string, params ...int) HttpClient {
 	status := 200
 	if len(params) > 0 {
@@ -48,6 +40,13 @@ func createClient(body string, params ...int) HttpClient {
 	return &HttpClientMock{
 		body: body,
 		status: status,
+	}
+}
+
+func createTracker(client HttpClient) *SpotInterruptionTracker {
+	return &SpotInterruptionTracker{
+		client: client,
+		interval: (1 * time.Millisecond),
 	}
 }
 
@@ -76,7 +75,7 @@ func TestReturnsOnTerminate(t *testing.T) {
 }
 
 func TestDoesNotReturnOnNonTerminate(t *testing.T) {
-	client := createClient(`{"action":"terminat","time":"10:10"}`)
+	client := createClient(`{"action":"some-state","time":"10:10"}`)
 	tracker := createTracker(client)
 	resultChannel := make(chan bool)
 	go tracker.Track(resultChannel)
