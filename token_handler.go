@@ -1,9 +1,9 @@
 package main
 
 import (
-	"os"
-	"log"
 	"fmt"
+	"log"
+	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -73,6 +73,7 @@ func (handler *TokenHandler) failure(err Result) {
 }
 
 func (handler *TokenHandler) heartbeat() {
+	log.Print("Sending heartbeat")
 	sendTaskHeartbeatParams := &sfn.SendTaskHeartbeatInput{
 		TaskToken: aws.String(handler.taskToken),
 	}
