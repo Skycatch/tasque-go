@@ -98,8 +98,8 @@ console.log(JSON.stringify({ result: 'some-result' }))
 ```
 Error response example
 ```
-console.log('-=error=-')
-console.log(JSON.stringify({ error: 'IncorrectArgument' }))
+console.error('-=error=-')
+console.error(JSON.stringify({ error: 'IncorrectArgument' }))
 process.exit(1)
 ```
 

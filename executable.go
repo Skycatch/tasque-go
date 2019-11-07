@@ -13,6 +13,7 @@ import (
 	"sync"
 	"syscall"
 	"time"
+	"runtime"
 )
 
 const RESULT_PATTERN string = "-=result=-"
@@ -28,6 +29,7 @@ type Executable struct {
 	timeout           time.Duration
 	result            Result
 	heartbeatDuration time.Duration
+	trackInstanceInterruption bool
 }
 
 func (executable *Executable) Execute(handler MessageHandler) {
@@ -50,10 +52,9 @@ func (executable *Executable) execute(handler MessageHandler) {
 				}
 			}()
 
-			defer func() {
-				ticker.Stop()
-			}()
+			defer ticker.Stop()
 		}
+		
 		executable.executableTimeoutHelper(handler)
 	}
 }
@@ -61,19 +62,28 @@ func (executable *Executable) execute(handler MessageHandler) {
 func (executable *Executable) executableTimeoutHelper(handler MessageHandler) {
 	errorChannel := make(chan error)
 	responseChannel := make(chan *string)
+	instanceInterruptionChannel := make(chan bool)
+
+	if executable.trackInstanceInterruption {
+		tracker := NewTracker()
+		go tracker.Track(instanceInterruptionChannel)
+		defer tracker.Untrack()
+	}
+
 	go func() {
-		if response, err := executable.executionHelper(handler); err != nil {
+		if response, err := executable.executionHelper(handler, instanceInterruptionChannel); err != nil {
 			errorChannel <- err
 		} else {
 			responseChannel <- response
 		}
 	}()
+
 	select {
 	case err := <-errorChannel:
-		log.Printf("E: %s %s", executable.binary, err.Error())
+		log.Printf("E: %s %s\n", executable.binary, err.Error())
 		handler.failure(executable.result)
 	case response := <-responseChannel:
-		log.Printf("I: %s finished successfully", executable.binary)
+		fmt.Printf("I: %s finished successfully\n", executable.binary)
 		handler.success(response)
 	case <-time.After(executable.timeout):
 		log.Printf("E: %s timed out after %f seconds", executable.binary, executable.timeout.Seconds())
@@ -82,6 +92,7 @@ func (executable *Executable) executableTimeoutHelper(handler MessageHandler) {
 	defer func() {
 		close(errorChannel)
 		close(responseChannel)
+		close(instanceInterruptionChannel)
 	}()
 }
 
@@ -101,7 +112,7 @@ func outputPipe(pipe io.ReadCloser, annotation string, result chan *string) {
 
 	for pipeScanner.Scan() {
 		output := pipeScanner.Text()
-		log.Printf("%s %s\n", annotation, output)
+		fmt.Printf("%s %s\n", annotation, output)
 		if isResponseString {
 			response = output
 		}
@@ -119,7 +130,7 @@ func outputPipe(pipe io.ReadCloser, annotation string, result chan *string) {
 	}
 }
 
-func (executable *Executable) executionHelper(handler MessageHandler) (*string, error) {
+func (executable *Executable) executionHelper(handler MessageHandler, instanceInterruptionChannel chan bool) (*string, error) {
 	var exitCode int
 	var err error
 	var stdinPipe io.WriteCloser
@@ -160,8 +171,22 @@ func (executable *Executable) executionHelper(handler MessageHandler) (*string, 
 
 	wg.Wait()
 
-	stdoutResponse = <- stdoutChan
-	stderrResponse = <- stderrChan
+	select {
+	case stdoutResponse = <-stdoutChan:
+	case stderrResponse = <-stderrChan:
+	case stop := <-instanceInterruptionChannel:
+		if stop {
+			executable.result.Error = "InstanceInterruption"
+			// since windows env doesn't support interruption signal, killing process immediately
+			if runtime.GOOS != "windows" {
+				command.Process.Signal(os.Interrupt)
+				time.Sleep(5 * time.Second)
+			}
+			fmt.Println("killing worker process")
+			command.Process.Kill()
+			return nil, fmt.Errorf("Instance interruption caught")
+		}
+	}
 
 	if err = command.Wait(); err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
@@ -177,8 +202,6 @@ func (executable *Executable) executionHelper(handler MessageHandler) (*string, 
 			executable.result.Exit = strconv.Itoa(exitCode)
 			if errorData["error"] != nil {
 				executable.result.Error = fmt.Sprintf("%v", errorData["error"])
-			} else {
-				executable.result.Error = "ExecutionError"
 			}
 		}
 		return nil, err

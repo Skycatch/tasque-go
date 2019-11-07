@@ -128,6 +128,7 @@ func main() {
 				arguments:         arguments[1:],
 				timeout:           getTimeout(),
 				heartbeatDuration: getHeartbeatTime(),
+				trackInstanceInterruption: os.Getenv("TRACK_INSTANCE_INTERRUPTION") == "true",
 			}
 			tasque.runWithTimeout()
 		} else {
