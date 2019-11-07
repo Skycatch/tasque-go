@@ -73,13 +73,10 @@ func (handler *TokenHandler) failure(err Result) {
 }
 
 func (handler *TokenHandler) heartbeat() {
-	log.Print("Sending heartbeat")
 	sendTaskHeartbeatParams := &sfn.SendTaskHeartbeatInput{
 		TaskToken: aws.String(handler.taskToken),
 	}
-	_, deleteMessageError := handler.client.SendTaskHeartbeat(sendTaskHeartbeatParams)
-
-	if deleteMessageError != nil {
-		return
+	if _, err := handler.client.SendTaskHeartbeat(sendTaskHeartbeatParams); err != nil {
+		fmt.Println("Heartbeat error: ", err.Error())
 	}
 }
