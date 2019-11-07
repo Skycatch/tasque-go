@@ -1,12 +1,12 @@
 package main
 
 import (
-	"time"
-	"net/http"
-	"log"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"encoding/json"
+	"log"
+	"net/http"
+	"time"
 )
 
 const actionStop string = "stop"
@@ -18,22 +18,22 @@ type HttpClient interface {
 }
 
 type SpotInterruptionTracker struct {
-	url string
+	url      string
 	interval time.Duration
-	ticker *time.Ticker
-	client HttpClient
+	ticker   *time.Ticker
+	client   HttpClient
 }
 
 type InstanceAction struct {
-	Action              string `json:"action"`
-	Time                string `json:"time"`
+	Action string `json:"action"`
+	Time   string `json:"time"`
 }
 
 func NewTracker() *SpotInterruptionTracker {
 	return &SpotInterruptionTracker{
-		client: &http.Client{Timeout: 5 * time.Second},
-		interval: 1 * time.Minute,
-		url: url,
+		client:   &http.Client{Timeout: 5 * time.Second},
+		interval: time.Minute,
+		url:      url,
 	}
 }
 
@@ -54,7 +54,7 @@ func (tracker *SpotInterruptionTracker) Track(result chan bool) {
 func (tracker *SpotInterruptionTracker) Untrack() {
 	if tracker.ticker != nil {
 		tracker.ticker.Stop()
-	}	
+	}
 }
 
 func (tracker *SpotInterruptionTracker) isInterrupting() bool {
@@ -77,7 +77,7 @@ func (tracker *SpotInterruptionTracker) getInstanceAction() (string, error) {
 	}
 	defer resp.Body.Close()
 
-	if (resp.StatusCode == 404) {
+	if resp.StatusCode == 404 {
 		return "Not found", nil
 	}
 
