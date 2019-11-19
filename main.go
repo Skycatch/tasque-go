@@ -198,11 +198,11 @@ func getTimeout() time.Duration {
 }
 
 func getHeartbeatTime() time.Duration {
-	taskTimeout := os.Getenv("TASK_HEARTBEAT")
-	if taskTimeout == "" {
-		taskTimeout = "30s"
+	heartbeatInterval := os.Getenv("TASK_HEARTBEAT")
+	if heartbeatInterval == "" {
+		heartbeatInterval = "30s"
 	}
-	timeout, err := time.ParseDuration(taskTimeout)
+	timeout, err := time.ParseDuration(heartbeatInterval)
 	log.Println("Heartbeat: ", timeout)
 	if err != nil {
 		log.Println(err.Error())
