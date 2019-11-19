@@ -32,7 +32,7 @@ type InstanceAction struct {
 func NewTracker() *SpotInterruptionTracker {
 	return &SpotInterruptionTracker{
 		client:   &http.Client{Timeout: 5 * time.Second},
-		interval: time.Minute,
+		interval: 5 * time.Second,
 		url:      url,
 	}
 }

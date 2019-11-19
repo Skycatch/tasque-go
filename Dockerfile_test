@@ -1,0 +1,10 @@
+FROM tasque/tasque:amd64 as tasque
+FROM node:12-alpine
+
+COPY --from=tasque /tasque /tasque
+COPY ./test.js /test.js
+
+RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
+
+ENTRYPOINT ["/tasque"]
+CMD ["node", "test.js"]
