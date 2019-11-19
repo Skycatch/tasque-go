@@ -14,10 +14,6 @@ docker-login:
 	@echo "Logging in"
 	@$(loginstring)
 
-environment ?= development
-bucket=skycatch-datahub-dev-terra-state
-role_arn="arn:aws:iam::533689966658:role/datahub-engineering"
-
 build:
 	docker build \
 		--no-cache \
