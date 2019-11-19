@@ -42,7 +42,7 @@ func (tracker *SpotInterruptionTracker) Track(result chan bool) {
 	ticker := time.NewTicker(tracker.interval)
 	tracker.ticker = ticker
 
-	for _ = range ticker.C {
+	for range ticker.C {
 		if isInterrupting := tracker.isInterrupting(); isInterrupting {
 			tracker.Untrack()
 			result <- true
@@ -53,6 +53,7 @@ func (tracker *SpotInterruptionTracker) Track(result chan bool) {
 
 func (tracker *SpotInterruptionTracker) Untrack() {
 	if tracker.ticker != nil {
+		fmt.Println("Stopping instance interruption tracker")
 		tracker.ticker.Stop()
 	}
 }

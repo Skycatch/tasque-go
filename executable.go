@@ -3,17 +3,19 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
 	"syscall"
 	"time"
-	"runtime"
 )
 
 const RESULT_PATTERN string = "-=result=-"
@@ -21,14 +23,14 @@ const ERROR_PATTERN string = "-=error=-"
 
 // Executable hello world
 type Executable struct {
-	binary            string
-	arguments         []string
-	stdin             bufio.Scanner
-	stdout            bufio.Scanner
-	stderr            bufio.Scanner
-	timeout           time.Duration
-	result            Result
-	heartbeatDuration time.Duration
+	binary                    string
+	arguments                 []string
+	stdin                     bufio.Scanner
+	stdout                    bufio.Scanner
+	stderr                    bufio.Scanner
+	timeout                   time.Duration
+	result                    Result
+	heartbeatDuration         time.Duration
 	trackInstanceInterruption bool
 }
 
@@ -54,7 +56,7 @@ func (executable *Executable) execute(handler MessageHandler) {
 
 			defer ticker.Stop()
 		}
-		
+
 		executable.executableTimeoutHelper(handler)
 	}
 }
@@ -62,7 +64,11 @@ func (executable *Executable) execute(handler MessageHandler) {
 func (executable *Executable) executableTimeoutHelper(handler MessageHandler) {
 	errorChannel := make(chan error)
 	responseChannel := make(chan *string)
+	stopChannel := make(chan string)
 	instanceInterruptionChannel := make(chan bool)
+	scriptInterruptionChannel := make(chan bool)
+
+	handleSignals(scriptInterruptionChannel)
 
 	if executable.trackInstanceInterruption {
 		tracker := NewTracker()
@@ -71,10 +77,28 @@ func (executable *Executable) executableTimeoutHelper(handler MessageHandler) {
 	}
 
 	go func() {
-		if response, err := executable.executionHelper(handler, instanceInterruptionChannel); err != nil {
+		if response, err := executable.executionHelper(handler, stopChannel); err != nil {
 			errorChannel <- err
 		} else {
 			responseChannel <- response
+		}
+	}()
+
+	go func() {
+		select {
+		case instanceInterrupted := <-instanceInterruptionChannel:
+			if instanceInterrupted {
+				fmt.Println("Instance interruption event caught")
+				stopChannel <- "InstanceInterruption"
+			}
+		case scriptInterrupted := <-scriptInterruptionChannel:
+			if scriptInterrupted {
+				fmt.Println("Script interruption signal caught")
+				stopChannel <- "ScriptInterruption"
+			}
+		case <-time.After(executable.timeout):
+			stopChannel <- "Timeout"
+			log.Printf("E: %s timed out after %.0f seconds", executable.binary, executable.timeout.Seconds())
 		}
 	}()
 
@@ -85,14 +109,14 @@ func (executable *Executable) executableTimeoutHelper(handler MessageHandler) {
 	case response := <-responseChannel:
 		fmt.Printf("I: %s finished successfully\n", executable.binary)
 		handler.success(response)
-	case <-time.After(executable.timeout):
-		log.Printf("E: %s timed out after %f seconds", executable.binary, executable.timeout.Seconds())
 	}
 
 	defer func() {
 		close(errorChannel)
 		close(responseChannel)
+		close(stopChannel)
 		close(instanceInterruptionChannel)
+		close(scriptInterruptionChannel)
 	}()
 }
 
@@ -123,14 +147,14 @@ func outputPipe(pipe io.ReadCloser, annotation string, result chan *string) {
 		}
 	}
 
-	if (response != "") {
+	if response != "" {
 		result <- &response
 	} else {
 		close(result)
 	}
 }
 
-func (executable *Executable) executionHelper(handler MessageHandler, instanceInterruptionChannel chan bool) (*string, error) {
+func (executable *Executable) executionHelper(handler MessageHandler, stopChannel chan string) (*string, error) {
 	var exitCode int
 	var err error
 	var stdinPipe io.WriteCloser
@@ -159,6 +183,7 @@ func (executable *Executable) executionHelper(handler MessageHandler, instanceIn
 		return nil, err
 	}
 
+	var stopChannelError string
 	var wg sync.WaitGroup
 	var stdoutResponse *string
 	var stderrResponse *string
@@ -171,22 +196,24 @@ func (executable *Executable) executionHelper(handler MessageHandler, instanceIn
 
 	wg.Wait()
 
-	select {
-	case stdoutResponse = <-stdoutChan:
-	case stderrResponse = <-stderrChan:
-	case stop := <-instanceInterruptionChannel:
-		if stop {
-			executable.result.Error = "InstanceInterruption"
+	go func() {
+		select {
+		case stdoutResponse = <-stdoutChan:
+		case stderrResponse = <-stderrChan:
+		case stop := <-stopChannel:
+			fmt.Printf("E: %s\n", stop)
+			executable.result.Error = stop
+			stopChannelError = stop
 			// since windows env doesn't support interruption signal, killing process immediately
 			if runtime.GOOS != "windows" {
 				command.Process.Signal(os.Interrupt)
+				fmt.Println("Interrupt signal sent")
 				time.Sleep(5 * time.Second)
 			}
 			fmt.Println("killing worker process")
 			command.Process.Kill()
-			return nil, fmt.Errorf("Instance interruption caught")
 		}
-	}
+	}()
 
 	if err = command.Wait(); err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
@@ -194,7 +221,7 @@ func (executable *Executable) executionHelper(handler MessageHandler, instanceIn
 			log.Printf("An error occured (%s %d)\n", executable.binary, exitCode)
 
 			var errorData map[string]interface{}
-			
+
 			if stderrResponse != nil {
 				json.Unmarshal([]byte(*stderrResponse), &errorData)
 			}
@@ -207,5 +234,19 @@ func (executable *Executable) executionHelper(handler MessageHandler, instanceIn
 		return nil, err
 	}
 
+	if stopChannelError != "" {
+		return nil, errors.New(stopChannelError)
+	}
+
 	return stdoutResponse, nil
+}
+
+func handleSignals(interruptionChannel chan<- bool) {
+	sigs := make(chan os.Signal)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+
+	go func() {
+		<-sigs
+		interruptionChannel <- true
+	}()
 }

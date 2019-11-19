@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 )
 
@@ -124,10 +125,10 @@ func main() {
 		if len(os.Args) > 1 {
 			tasque := Tasque{}
 			tasque.Executable = &Executable{
-				binary:            arguments[0],
-				arguments:         arguments[1:],
-				timeout:           getTimeout(),
-				heartbeatDuration: getHeartbeatTime(),
+				binary:                    arguments[0],
+				arguments:                 arguments[1:],
+				timeout:                   getTimeout(),
+				heartbeatDuration:         getHeartbeatTime(),
 				trackInstanceInterruption: os.Getenv("TRACK_INSTANCE_INTERRUPTION") == "true",
 			}
 			tasque.runWithTimeout()
@@ -148,7 +149,7 @@ func (tasque *Tasque) getHandler() {
 	if taskToken != "" {
 		handler = &TokenHandler{
 			taskToken: taskToken,
-			region: os.Getenv("AWS_REGION"),
+			region:    os.Getenv("AWS_REGION"),
 		}
 	} else if taskPayload != "" {
 		handler = &ENVHandler{}
